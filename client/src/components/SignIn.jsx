@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Button from "../components/Button";
 import { Eye, EyeOff } from "lucide-react";
 import axios from "axios";
+import { Link } from "react-router-dom";
 
 
 const SignIn = () => {
@@ -59,7 +60,10 @@ const SignIn = () => {
         </div>
 
         {/* Sign Up Button */}
+        <Link to="/wheather" >
+        
         <Button text="Sign In" onClick={handleSignIn} />
+        </Link>
 
         {successMessage && (
           <p

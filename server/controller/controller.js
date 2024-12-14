@@ -1,5 +1,6 @@
-require('dotenv').config();
-const axios = require('axios');
+require("dotenv").config();
+const axios = require("axios");
+const User = require("../models/user");
 
 // Fetch Weather Data
 const getWeather = async (req, res) => {
@@ -34,7 +35,7 @@ const getWeather = async (req, res) => {
         weather_descriptions: response.data.current.weather_descriptions,
         humidity: response.data.current.humidity,
         wind_speed: response.data.current.wind_speed,
-      }
+      },
     });
   } catch (err) {
     console.error("Error fetching weather data:", err.message);
