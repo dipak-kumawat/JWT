@@ -1,79 +1,116 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Button from "../components/Button";
 import { Eye, EyeOff } from "lucide-react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: ""
+  });
   const [errorMessage, setErrorMessage] = useState("");
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    setErrorMessage("");
+  };
 
   const handleClick = () => {
     setShowPassword(!showPassword);
   };
 
   const handleSignUp = async () => {
-    if (password !== confirmPassword) {
+    // Reset messages
+    setErrorMessage("");
+    setSuccessMessage("");
+    
+    // Validate passwords match
+    if (formData.password !== formData.confirmPassword) {
       setErrorMessage("Passwords don't match");
       return;
     }
-    setErrorMessage("");
+
+    // Validate all fields are filled
+    if (!formData.username || !formData.email || !formData.password) {
+      setErrorMessage("All fields are required");
+      return;
+    }
+
+    setIsLoading(true);
+    
     try {
-      const response = await axios.post("http://localhost:5000/api/signup", {
-        username,
-        email,
-        password,
+      const response = await axios.post("http://localhost:5000/api/register", {
+        username: formData.username,
+        email: formData.email,
+        password: formData.password
       });
-      if (response.status === 200) {
+
+      // Check for successful response (both 200 and 201 are valid)
+      if (response.status >= 200 && response.status < 300) {
         setSuccessMessage("Account created successfully");
-        setErrorMessage("");
+        
+        // Store the token
+        if (response.data.token) {
+          localStorage.setItem("token", response.data.token);
+        }
+        
+        // Use setTimeout to ensure state updates are processed
+        setTimeout(() => {
+          navigate("/weather");
+        }, 1000);
       }
     } catch (error) {
       console.error("Error during sign-up:", error);
       setErrorMessage(
         error.response?.data?.message ||
-          "Something went wrong in signing up. Please try again."
+        "Something went wrong in signing up. Please try again."
       );
-      setSuccessMessage("");
+    } finally {
+      setIsLoading(false);
     }
   };
+
   return (
     <div>
       <div className="grid grid-cols-1 mt-4 gap-6 px-9">
-        {/* Email Input */}
         <input
           type="text"
+          name="username"
           className="border border-blue-500 focus:outline-purple-400 h-10 rounded-lg px-2"
           placeholder="User Name"
-          onChange={(e) => {
-            setUsername(e.target.value);
-          }}
+          value={formData.username}
+          onChange={handleInputChange}
         />
+        
         <input
-          type="text"
+          type="email"
+          name="email"
           className="border border-blue-500 focus:outline-purple-400 h-10 rounded-lg px-2"
           placeholder="Email"
-          onChange={(e) => {
-            setEmail(e.target.value);
-          }}
+          value={formData.email}
+          onChange={handleInputChange}
         />
-        {/* Password Input with Eye Icon */}
+
         <div className="relative">
           <input
             type={showPassword ? "text" : "password"}
+            name="password"
             className="border border-blue-500 focus:outline-purple-400 h-10 rounded-lg px-2 w-full"
             placeholder="Password"
-            onChange={(e) => {
-              setPassword(e.target.value);
-              setErrorMessage("");
-            }}
+            value={formData.password}
+            onChange={handleInputChange}
           />
-
-          {/* Eye Icon */}
           <button
             type="button"
             onClick={handleClick}
@@ -85,15 +122,12 @@ const SignUp = () => {
         <div className="relative">
           <input
             type={showPassword ? "text" : "password"}
+            name="confirmPassword"
             className="border border-blue-500 focus:outline-purple-400 h-10 rounded-lg px-2 w-full"
             placeholder="Confirm Password"
-            onChange={(e) => {
-              setConfirmPassword(e.target.value);
-              setErrorMessage("");
-            }}
+            value={formData.confirmPassword}
+            onChange={handleInputChange}
           />
-
-          {/* Eye Icon */}
           <button
             type="button"
             onClick={handleClick}
@@ -102,10 +136,12 @@ const SignUp = () => {
           </button>
         </div>
 
-        {/* Sign In Button */}
-        <Button text="Sign Up" onClick={handleSignUp} />
+        <Button 
+          text={isLoading ? "Signing Up..." : "Sign Up"} 
+          onClick={handleSignUp}
+          disabled={isLoading}
+        />
 
-        {/* Error Message */}
         {errorMessage && (
           <p className="text-red-500" aria-live="polite">
             {errorMessage}

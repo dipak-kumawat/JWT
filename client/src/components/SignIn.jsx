@@ -1,33 +1,49 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Button from "../components/Button";
 import { Eye, EyeOff } from "lucide-react";
 import axios from "axios";
-import { Link } from "react-router-dom";
-
+import { useNavigate } from "react-router-dom";
 
 const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isError, setIsError] = useState(false);
-
+  const navigate = useNavigate();
 
   const handleClick = () => {
     setShowPassword(!showPassword);
   };
 
-  const handleSignIn = async () => {
+  const handleSignIn = async (e) => {
+    e.preventDefault();
+    console.log('Attempting to sign in with:', { email, password });
+
     try {
-      const response = await axios.get("http://localhost:5000/api/signin");
+      const response = await axios.post("http://localhost:5000/api/login", 
+        {
+          email,
+          password,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        }
+      );
+
       if (response.status === 200) {
-        console.log(response.data);
+        console.log('Login response:', response.data);
         setSuccessMessage("Signed in successfully");
+        localStorage.setItem("token", response.data.token);
+        navigate("/weather");
       }
     } catch (error) {
-      console.error("Error during sign-up:", error);
+      console.log('Error details:', error);
       setSuccessMessage(
         error.response?.data?.message ||
-          "Something went wrong in signing in. Please try again."
+        "Something went wrong during sign-in. Please try again."
       );
       setIsError(true);
     }
@@ -35,13 +51,17 @@ const SignIn = () => {
 
   return (
     <div>
-      <div className="grid grid-cols-1 mt-4 gap-6 px-9">
+      <form onSubmit={handleSignIn} className="grid grid-cols-1 mt-4 gap-6 px-9">
         {/* Email Input */}
         <input
-          type="text"
+          type="email"
           className="border border-blue-500 focus:outline-purple-400 h-10 rounded-lg px-2"
           placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
         />
+        
         {/* Password Input */}
         <div className="relative">
           <input
@@ -50,6 +70,7 @@ const SignIn = () => {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            required
           />
           <button
             type="button"
@@ -59,22 +80,21 @@ const SignIn = () => {
           </button>
         </div>
 
-        {/* Sign Up Button */}
-        <Link to="/wheather" >
-        
-        <Button text="Sign In" onClick={handleSignIn} />
-        </Link>
+        {/* Sign In Button */}
+        <Button 
+          type="submit" 
+          text="Sign In" 
+          onClick={handleSignIn}
+        />
 
         {successMessage && (
           <p
-            className={`${
-              isError ? "text-red-500" : "text-green-500"
-            } mt-2`}
+            className={`${isError ? "text-red-500" : "text-green-500"} mt-2`}
             aria-live="polite">
             {successMessage}
           </p>
         )}
-      </div>
+      </form>
     </div>
   );
 };

@@ -3,6 +3,8 @@ const User = require("../models/user");
 const jwt = require("jsonwebtoken");
 
 const login = async (req, res) => {
+  console.log("Login endpoint hit");
+  console.log('Request body:', req.body);
   const { email, password } = req.body;
   if (!email || !password) {
     return res.status(400).send("Email and password are required");
@@ -24,14 +26,31 @@ const login = async (req, res) => {
       { expiresIn: "1h" }
     );
 
-    res.status(200).json(
-      { message: "Login successful", token, userId: user._id, email: user.email }
-    )
+    res
+      .status(200)
+      .json({
+        message: "Login successful",
+        token,
+        userId: user._id,
+        email: user.email,
+      });
   } catch (error) {
-    console.error("Error during login:", error);
-    res.status(500).send("Internal server error");
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      console.log(error.response.data);
+      console.log(error.response.status);
+      console.log(error.response.headers);
+    } else if (error.request) {
+      // The request was made but no response was received
+      // `error.request` is an instance of XMLHttpRequest in the browser
+      // and an instance of http.ClientRequest in node.js
+      console.log(error.request);
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      console.log("Error", error.message);
+    }
   }
 };
-
 
 module.exports = { login };

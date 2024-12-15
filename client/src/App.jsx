@@ -9,7 +9,7 @@ const router = createBrowserRouter([
     element: <Login />,
   },
   {
-    path: "/wheather",
+    path: "/weather",
     element: <Wheather />,
   },
 ]);

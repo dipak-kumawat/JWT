@@ -2,6 +2,8 @@ const bcrypt = require("bcryptjs");
 const User = require("../models/user");
 
 const register = async (req, res) => {
+  console.log("register endpoint hit");
+  console.log('Request body:', req.body);
   const { username, email, password } = req.body;
   if (!email || !password) {
     return res.status(400).send("Email and password are required");
